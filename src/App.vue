@@ -57,8 +57,6 @@ onMounted(() => {
             router.replace('/login')
         }
     }
-
-
 })
 
 const log_out = () => {
