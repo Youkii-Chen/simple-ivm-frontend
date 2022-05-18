@@ -38,10 +38,13 @@ import searchBox from './searchBox.vue';
 import addItem from './addItem.vue'
 import itemTable from './itemTable.vue'
 import detailDrawer from './detailDrawer.vue'
+import { store } from '../../store';
 
 type drawerType = InstanceType<typeof detailDrawer>
 const drawer = ref<drawerType | null>(null)
 const isNew = ref(false)
+
+
 
 onMounted(() => {
     watch(() => (drawer as any).value.open, (nv, ov) => {
@@ -50,15 +53,28 @@ onMounted(() => {
             isNew.value = false
         }
     })
+
+    while (true) {
+        if (store.state) break
+    }
+
+    if (store.state.goods.length <= 0){
+        // 获取货物
+        store.dispatch("get_goods")
+    }if (store.state.goods.length > 0 && store.state.tableDataSource.length == 0){
+        for (let item of store.state.goods){
+            store.state.tableDataSource.push(item)
+        }
+    }
 })
 
 const addNew = () => {
-    (drawer as any).value.currnetItem.key  =  -1;
-    (drawer as any).value.currnetItem.mark = '';
-    (drawer as any).value.currnetItem.name = '';
-    (drawer as any).value.currnetItem.quan =  0;
+    (drawer as any).value.currentItem.key  =  -1;
+    (drawer as any).value.currentItem.mark = '';
+    (drawer as any).value.currentItem.name = '';
+    (drawer as any).value.currentItem.quan =  0;
     (drawer as any).value.baseQuan         =  0;
-    (drawer as any).value.currnetItem.unit = '';
+    (drawer as any).value.currentItem.unit = '';
 
     isNew.value = true;
     (drawer as any).value.open = true
@@ -66,13 +82,13 @@ const addNew = () => {
 
 const showItemDeatil = (record: goodsInfoType) => {
     // 点击 table 中的详情, 弹出详情页面
-    //(drawer as any).value.currnetItem = record
-    (drawer as any).value.currnetItem.key = record.key;
-    (drawer as any).value.currnetItem.mark = record.mark;
-    (drawer as any).value.currnetItem.name = record.name;
-    (drawer as any).value.currnetItem.quan = record.quan;
+    //(drawer as any).value.currrentItem = record
+    (drawer as any).value.currentItem.key = record.key;
+    (drawer as any).value.currentItem.mark = record.mark;
+    (drawer as any).value.currentItem.name = record.name;
+    (drawer as any).value.currentItem.quan = record.quan;
     (drawer as any).value.baseQuan = record.quan;
-    (drawer as any).value.currnetItem.unit = record.unit;
+    (drawer as any).value.currentItem.unit = record.unit;
     
 
     (drawer as any).value.open = true

@@ -6,7 +6,7 @@ interface goodsInfoType {
     mark?: string,
 }
 interface userInfo{
-    userName: string,
+    username: string,
     password: string
 }
 interface currnetItemType extends goodsInfoType {

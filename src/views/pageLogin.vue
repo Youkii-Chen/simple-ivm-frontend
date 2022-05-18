@@ -3,7 +3,7 @@
         @finish="onFinish">
         <a-form-item label="用户名" name="username"
             :rules="[{ required: true, message: '请输入用户名!' }]">
-            <a-input v-model:value="formData.userName" />
+            <a-input v-model:value="formData.username" />
         </a-form-item>
 
         <a-form-item label="用户密码" name="password"
@@ -20,12 +20,20 @@
 <script setup lang="ts">
     import type { userInfo } from '../types';
     import { ref, reactive } from 'vue'
+    import { useStore } from '../store';
+
+    const store = useStore()
     const formData = reactive<userInfo>({
-        userName: '',
+        username: '',
         password: ''
     })
 
     const onFinish = (value: object) => {
-        console.log("登录: ", value)
+        try {
+            store.dispatch("login", value)
+        } catch (error) {
+            console.log("登录失败: ", error)
+        }
+        
     }
 </script>

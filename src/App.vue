@@ -9,7 +9,7 @@
                 <a-col>
                     <a-tooltip>
                         <template #title>退出登录</template>
-                        <a-button @click="log_out" type="text" shape="circle">
+                        <a-button @click="store.dispatch('logout')" type="text" shape="circle">
                             <template #icon>
                                 <logout-outlined :style="{ fontSize: '24px', color: 'rgb(255,255,255,.85)' }" />
                             </template>
@@ -59,12 +59,6 @@ onMounted(() => {
     }
 })
 
-const log_out = () => {
-    // 退出登录
-    store.state.isLogined = false
-    localStorage.removeItem("login_token")
-    router.go(0) // 刷新
-}
 
 </script>
 

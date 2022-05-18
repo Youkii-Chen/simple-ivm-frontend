@@ -13,7 +13,11 @@ export const router = createRouter({
 })
 
 router.beforeEach((to, from) => {
-    if (store.state.isLogined && from.path === '/login'){
+    while (true) {
+        if (store.state) break
+    }
+    
+    if (store.state.isLogined && to.path === '/login'){
         // 防止重复登录
         return false
     }if (!store.state.isLogined && to.path === '/login'){
