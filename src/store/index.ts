@@ -80,7 +80,7 @@ export const store = createStore<State>(
                 params.append('password', data.password);
                 axios.post('/login/', params, {headers: {'Content-Type': 'application/x-www-form-urlencoded'}})
                 .then(response => {
-                    console.log(response)
+                    // console.log(response)
                     if (response.status != 200){
                         // 用户名密码校验失败
                         
@@ -130,24 +130,63 @@ export const store = createStore<State>(
             },
             async del(context, item){
                 try {
-                    await axios.post('/del', item)
-                    context.state.goods.forEach((item_, idx, arr)=>{
-                        if (item_.name == item.name){
-                            arr.splice(idx, 1);
-                        }
-                    })
-                    notification.info({message: "删除成功"})
+                    console.log("发送删除请求: ", item)
+                    const resp = await axios.post('/del', item)
+                    if (resp.status == 200){
+                        notification.info({message: "删除成功!"})
+                        // await this.dispatch('get_goods')
+                        
+                        // 删除该项目
+                        context.state.goods.forEach((item_,i)=> {
+                            if (item_.name === item.name) {
+                                context.state.goods.splice(i, 1);
+                            }
+                        })
+
+                        context.state.tableDataSource.forEach((item_,i)=> {
+                            if (item_.name === item.name) {
+                                context.state.tableDataSource.splice(i, 1);
+                            }
+                        })
+                    }else{
+                        notification.error({message: `删除失败! : ${resp.data.detail}`})
+                    }
                 } catch (error) {
                     notification.error({
                         message: `删除失败: ${error}`
                     })
                 }
             },
+            
+            async update(context, item){
+                try {
+                    const resp = await axios.post('/update', item)
+                    if (resp.status == 200){
+                        notification.info({message: "更新成功!"})
+                        // await this.dispatch('get_goods')
+                        context.state.tableDataSource.push(item)
+                        context.state.goods.push(item)
+                    }else{
+                        notification.error({message: `更新失败! : ${resp.data.detail}`})
+                    }
+                    
+                } catch (error) {
+                    notification.error({
+                        message: `添加失败: ${error}`
+                    })
+                }
+            },
             async add(context, item){
                 try {
-                    await axios.post('/add', item)
-                    notification.info({message: "添加成功"})
-                    await this.dispatch('get_goods')
+                    const resp = await axios.post('/add', item)
+                    if (resp.status == 200){
+                        notification.info({message: "添加成功!"})
+                        // await this.dispatch('get_goods')
+                        context.state.tableDataSource.push(resp.data)
+                        context.state.goods.push(resp.data)
+                    }else{
+                        notification.error({message: `添加失败! : ${resp.data.detail}`})
+                    }
                 } catch (error) {
                     notification.error({
                         message: `添加失败: ${error}`
@@ -166,17 +205,24 @@ const axios = new Axios({
     baseURL: store.state.remote_url,
     headers: {
         accept: "application/json",
-        Authorization: ''
+        Authorization: '',
+        'content-type': "application/json"
     }
 })
 
 axios.interceptors.request.use(function(config){
     if (store.state.access_token) (config.headers as any).Authorization = store.state.access_token
+    config.data = JSON.stringify(config.data)
     return config
 })
 
 axios.interceptors.response.use(function(response){
-    if (response.status == 401){
+    response.data = JSON.parse(response.data)
+    const data = response.data
+
+    if (response.status != 200){
+        console.log(JSON.stringify(data.detail))
+    }if (response.status == 401){
         // token 失效
         store.state.access_token = ""
         store.state.isLogined = false
@@ -186,6 +232,6 @@ axios.interceptors.response.use(function(response){
         })
         throw new Error("Token 失效")
     }
-    response.data = JSON.parse(response.data)
+            
     return response
 })

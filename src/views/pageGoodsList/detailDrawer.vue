@@ -6,12 +6,14 @@
             </a-form-item>
             <a-form-item label="货物数量">
                 <a-row type="flex" align="middle" :wrap="false">
-                    <a-col flex="auto" >
-                        <a-input-number style="width: 100%; box-sizing: border-box;" v-model:value="currentItem.quan" @change="quanModified" />
+                    <a-col flex="auto">
+                        <a-input-number style="width: 100%; box-sizing: border-box;" v-model:value="currentItem.quan"
+                            @change="quanModified" />
                     </a-col>
                     <a-col style="margin-left: 16px;margin-right: 8px;min-width: 2rem;">变动:</a-col>
                     <a-col>
-                        <a-input-number style="width:85px;" :disabled="$props.isNew" v-model:value="quanDelta" @change="deltaModified" />
+                        <a-input-number style="width:85px;" :disabled="$props.isNew" v-model:value="quanDelta"
+                            @change="deltaModified" />
                     </a-col>
                 </a-row>
             </a-form-item>
@@ -26,9 +28,12 @@
 
 
         </a-form>
-        
-        <a-button style="margin-right: 8px;" type="primary" @click="store.dispatch('add', currentItem)">保存</a-button>
-        <a-popconfirm title="确定要删除吗?" ok-text="是的" cancel-text="算了" @confirm="store.dispatch('del', currentItem)">
+
+        <a-button style="margin-right: 8px;" type="primary"
+            @click="isNew ? store.dispatch('add', currentItem) : store.dispatch('update', currentItem); open = !open">
+            保存</a-button>
+        <a-popconfirm title="确定要删除吗?" ok-text="是的" cancel-text="算了"
+            @confirm="store.dispatch('del', currentItem); open = !open">
             <a-button :disabled="$props.isNew" type="danger">删除</a-button>
         </a-popconfirm>
 

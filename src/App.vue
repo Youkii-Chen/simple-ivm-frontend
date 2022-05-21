@@ -48,6 +48,9 @@ const store = useStore()
 const router = useRouter()
 
 onMounted(() => {
+    while (true) {
+        if (store.state) break
+    }
     // 进入导航
     if (!store.state.debug) {
         // 未在debug, 自动跳转
