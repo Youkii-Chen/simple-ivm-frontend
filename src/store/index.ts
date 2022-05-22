@@ -69,7 +69,7 @@ export const store = createStore<State>(
                 debug: false,
                 goods: [],
                 tableDataSource: [],
-                remote_url: "http://127.0.0.1:8000",
+                remote_url: "/api",
                 access_token: (localStorage.getItem("access_token") as string)
             }
         })(),
@@ -78,7 +78,7 @@ export const store = createStore<State>(
                 const params = new URLSearchParams();
                 params.append('username', data.username);
                 params.append('password', data.password);
-                axios.post('/login/', params, {headers: {'Content-Type': 'application/x-www-form-urlencoded'}})
+                axios.post('/login/', params, {headers: {'content-type': 'application/x-www-form-urlencoded'}})
                 .then(response => {
                     // console.log(response)
                     if (response.status != 200){
@@ -130,8 +130,7 @@ export const store = createStore<State>(
             },
             async del(context, item){
                 try {
-                    console.log("发送删除请求: ", item)
-                    const resp = await axios.post('/del', item)
+                    const resp = await axios.post('/del', JSON.stringify(item))
                     if (resp.status == 200){
                         notification.info({message: "删除成功!"})
                         // await this.dispatch('get_goods')
@@ -160,12 +159,30 @@ export const store = createStore<State>(
             
             async update(context, item){
                 try {
-                    const resp = await axios.post('/update', item)
+                    const resp = await axios.post('/update', JSON.stringify(item))
                     if (resp.status == 200){
                         notification.info({message: "更新成功!"})
                         // await this.dispatch('get_goods')
-                        context.state.tableDataSource.push(item)
-                        context.state.goods.push(item)
+
+
+                        // 更新该项目
+                        context.state.goods.forEach((item_,i)=> {
+                            if (item_.key === item.key) {
+                                item_.name = item.name
+                                item_.mark = item.mark
+                                item_.quan = item.quan
+                                item_.unit = item.unit
+                            }
+                        })
+
+                        context.state.tableDataSource.forEach((item_,i)=> {
+                            if (item_.key === item.key) {
+                                item_.name = item.name
+                                item_.mark = item.mark
+                                item_.quan = item.quan
+                                item_.unit = item.unit
+                            }
+                        })
                     }else{
                         notification.error({message: `更新失败! : ${resp.data.detail}`})
                     }
@@ -178,7 +195,7 @@ export const store = createStore<State>(
             },
             async add(context, item){
                 try {
-                    const resp = await axios.post('/add', item)
+                    const resp = await axios.post('/add', JSON.stringify(item))
                     if (resp.status == 200){
                         notification.info({message: "添加成功!"})
                         // await this.dispatch('get_goods')
@@ -212,7 +229,6 @@ const axios = new Axios({
 
 axios.interceptors.request.use(function(config){
     if (store.state.access_token) (config.headers as any).Authorization = store.state.access_token
-    config.data = JSON.stringify(config.data)
     return config
 })
 

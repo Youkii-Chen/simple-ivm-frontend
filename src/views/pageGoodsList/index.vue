@@ -75,6 +75,7 @@ const addNew = () => {
     (drawer as any).value.currentItem.quan =  0;
     (drawer as any).value.baseQuan         =  0;
     (drawer as any).value.currentItem.unit = '';
+    (drawer as any).value.quanDelta        =  0;
 
     isNew.value = true;
     (drawer as any).value.open = true
@@ -83,12 +84,13 @@ const addNew = () => {
 const showItemDeatil = (record: goodsInfoType) => {
     // 点击 table 中的详情, 弹出详情页面
     //(drawer as any).value.currrentItem = record
-    (drawer as any).value.currentItem.key = record.key;
+    (drawer as any).value.currentItem.key  = record.key;
     (drawer as any).value.currentItem.mark = record.mark;
     (drawer as any).value.currentItem.name = record.name;
     (drawer as any).value.currentItem.quan = record.quan;
-    (drawer as any).value.baseQuan = record.quan;
+    (drawer as any).value.baseQuan         = record.quan;
     (drawer as any).value.currentItem.unit = record.unit;
+    (drawer as any).value.quanDelta        =           0;
     
 
     (drawer as any).value.open = true
