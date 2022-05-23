@@ -3,7 +3,7 @@ import { InjectionKey } from 'vue'
 import { goodsInfoType } from '../types'
 import { router } from '../route'
 
-import { Axios } from 'axios'
+import Axios from 'axios'
 import { notification } from 'ant-design-vue'
 
 
@@ -14,7 +14,6 @@ export interface State {
     debug: boolean
     goods: goodsInfoType[]
     tableDataSource: goodsInfoType[]
-    remote_url: string
     access_token: string
 }
 
@@ -69,7 +68,6 @@ export const store = createStore<State>(
                 debug: false,
                 goods: [],
                 tableDataSource: [],
-                remote_url: "/api",
                 access_token: (localStorage.getItem("access_token") as string)
             }
         })(),
@@ -78,15 +76,20 @@ export const store = createStore<State>(
                 const params = new URLSearchParams();
                 params.append('username', data.username);
                 params.append('password', data.password);
-                axios.post('/login/', params, {headers: {'content-type': 'application/x-www-form-urlencoded'}})
+                Axios.post('/api/login', params, {headers: {'content-type': 'application/x-www-form-urlencoded'}})
                 .then(response => {
                     // console.log(response)
                     if (response.status != 200){
                         // 用户名密码校验失败
-                        
-                        notification.error({
-                            message: `登录失败: ${ response.data.detail }`
-                        })
+                        if (response.status == 401){
+                            notification.error({
+                                message: `登录失败: 用户名或密码错误.`
+                            }) 
+                        }else{
+                            notification.error({
+                                message: `登录失败: ${ response.data.detail }`
+                            })
+                        }
                     }else {
                         // 成功登录
                         localStorage.setItem("access_token", `Bearer ${ response.data.access_token }`)
@@ -99,8 +102,9 @@ export const store = createStore<State>(
                     }
                 }).catch(
                     error => {
+                        console.log(error)
                         notification.error({
-                            message: `登录失败: 服务器错误! ${error}`
+                            message: `登录失败: ${error.response.data.detail}`
                         })
                     }
                 )
@@ -124,7 +128,7 @@ export const store = createStore<State>(
                     }
                 } catch (error) {
                     notification.error({
-                        message: `无法获取货物列表: ${error}`
+                        message: `无法获取货物列表: ${(error as any).response.data.detail}`
                     })
                 }
             },
@@ -152,7 +156,7 @@ export const store = createStore<State>(
                     }
                 } catch (error) {
                     notification.error({
-                        message: `删除失败: ${error}`
+                        message: `删除失败: ${(error as any).response.data.detail}`
                     })
                 }
             },
@@ -189,7 +193,7 @@ export const store = createStore<State>(
                     
                 } catch (error) {
                     notification.error({
-                        message: `添加失败: ${error}`
+                        message: `添加失败: ${(error as any).response.data.detail}`
                     })
                 }
             },
@@ -206,7 +210,7 @@ export const store = createStore<State>(
                     }
                 } catch (error) {
                     notification.error({
-                        message: `添加失败: ${error}`
+                        message: `添加失败: ${(error as any).response.data.detail}`
                     })
                 }
             }
@@ -218,36 +222,32 @@ export function useStore() {
     return baseUseStore(key)
 }
 
-const axios = new Axios({
-    baseURL: store.state.remote_url,
+const axios = Axios.create({
+    baseURL: '/api',
     headers: {
-        accept: "application/json",
-        Authorization: '',
-        'content-type': "application/json"
+        'Accept': "application/json",
+        'Authorization': '',
+        'Content-Type': "application/json"
     }
 })
 
 axios.interceptors.request.use(function(config){
-    if (store.state.access_token) (config.headers as any).Authorization = store.state.access_token
+    if (store.state.access_token) (config.headers as any)['Authorization'] = store.state.access_token
     return config
 })
 
-axios.interceptors.response.use(function(response){
-    response.data = JSON.parse(response.data)
-    const data = response.data
-
+axios.interceptors.response.use((response) => {
+    // response.data = JSON.parse(response.data)
+    // const data = response.data
     if (response.status != 200){
-        console.log(JSON.stringify(data.detail))
+        console.log(JSON.stringify(response.data.detail))
     }if (response.status == 401){
         // token 失效
         store.state.access_token = ""
         store.state.isLogined = false
         localStorage.removeItem("access_token")
-        notification.error({
-            message: "登录失效, 请重新登录！"
-        })
-        throw new Error("Token 失效")
+        router.replace('/login')
+        // throw new Error("Token 失效")
     }
-            
     return response
 })

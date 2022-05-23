@@ -54,7 +54,7 @@ onMounted(() => {
     // 进入导航
     if (!store.state.debug) {
         // 未在debug, 自动跳转
-        if (store.state.isLogined) {
+        if (store.state.isLogined){
             router.replace('/goods')
         } else {
             router.replace('/login')

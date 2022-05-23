@@ -9,6 +9,7 @@ import {
 
 
 export default defineConfig({
+  base: '/ui/',
   plugins: [
     vue(),
     Components({
