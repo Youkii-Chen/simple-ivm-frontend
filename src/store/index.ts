@@ -1,6 +1,6 @@
 import { createStore, Store, useStore as baseUseStore } from 'vuex'
 import { InjectionKey } from 'vue'
-import { goodsInfoType } from '../types'
+import { goodsInfoType, cateGoodsType } from '../types'
 import { router } from '../route'
 
 import Axios from 'axios'
@@ -12,9 +12,11 @@ import { notification } from 'ant-design-vue'
 export interface State {
     isLogined: boolean
     debug: boolean
-    goods: goodsInfoType[]
-    tableDataSource: goodsInfoType[]
+    goods: cateGoodsType[]
+    tableDataSource: cateGoodsType[]
     access_token: string
+    openDrawer: boolean
+    currentItem: cateGoodsType
 }
 
 // 定义 injection key
@@ -68,7 +70,15 @@ export const store = createStore<State>(
                 debug: false,
                 goods: [],
                 tableDataSource: [],
-                access_token: (localStorage.getItem("access_token") as string)
+                access_token: (localStorage.getItem("access_token") as string),
+                openDrawer: false,
+                currentItem: {
+                    key: '',
+                    name: '',
+                    mark: '',
+                    unit: '',
+                    goods: []
+                },
             }
         })(),
         actions: {
@@ -116,15 +126,11 @@ export const store = createStore<State>(
                 router.replace("/login") // reflesh
             },
             async get_goods(context){
-                // goods.get_all()
                 try {
                     const response = await axios.post('/list')
                     if (response.status == 200){
-                        context.state.goods = response.data
-                        context.state.tableDataSource.length = 0
-                        for (let item of context.state.goods){
-                            context.state.tableDataSource.push(item)
-                        }
+                        store.state.goods = response.data
+                        store.state.tableDataSource = JSON.parse(JSON.stringify(response.data)) 
                     }
                 } catch (error) {
                     notification.error({
@@ -133,6 +139,7 @@ export const store = createStore<State>(
                 }
             },
             async del(context, item){
+                // 删除整个分类
                 try {
                     const resp = await axios.post('/del', JSON.stringify(item))
                     if (resp.status == 200){
@@ -141,13 +148,13 @@ export const store = createStore<State>(
                         
                         // 删除该项目
                         context.state.goods.forEach((item_,i)=> {
-                            if (item_.name === item.name) {
+                            if (item_.key === item.key) {
                                 context.state.goods.splice(i, 1);
                             }
                         })
 
                         context.state.tableDataSource.forEach((item_,i)=> {
-                            if (item_.name === item.name) {
+                            if (item_.key === item.key) {
                                 context.state.tableDataSource.splice(i, 1);
                             }
                         })
@@ -161,59 +168,50 @@ export const store = createStore<State>(
                 }
             },
             
-            async update(context, item){
+            async update(context, [item, isNew = false]){
                 try {
                     const resp = await axios.post('/update', JSON.stringify(item))
+                    console.log(resp.data)
                     if (resp.status == 200){
                         notification.info({message: "更新成功!"})
-                        // await this.dispatch('get_goods')
-
-
-                        // 更新该项目
-                        context.state.goods.forEach((item_,i)=> {
-                            if (item_.key === item.key) {
-                                item_.name = item.name
-                                item_.mark = item.mark
-                                item_.quan = item.quan
-                                item_.unit = item.unit
-                            }
-                        })
-
-                        context.state.tableDataSource.forEach((item_,i)=> {
-                            if (item_.key === item.key) {
-                                item_.name = item.name
-                                item_.mark = item.mark
-                                item_.quan = item.quan
-                                item_.unit = item.unit
-                            }
-                        })
+                        item = resp.data
+                        
+                        if (isNew){
+                            context.state.goods.push(item)
+                            context.state.tableDataSource.push(item)
+                        }else{
+                            context.state.goods.forEach((item_,i)=> {
+                                if (item_.key === item.key) {
+                                    item_.name = item.name
+                                    item_.mark = item.mark
+                                    // item_.quan = item.quan
+                                    item_.unit = item.unit
+                                    item_.goods = item.goods
+                                }
+                            })
+    
+                            context.state.tableDataSource.forEach((item_,i)=> {
+                                if (item_.key === item.key) {
+                                    item_.name = item.name
+                                    item_.mark = item.mark
+                                    // item_.quan = item.quan
+                                    item_.unit = item.unit
+                                    item_.goods = item.goods
+                                }
+                            })
+                        }
+                        
                     }else{
                         notification.error({message: `更新失败! : ${resp.data.detail}`})
                     }
                     
                 } catch (error) {
+                    console.debug(error)
                     notification.error({
-                        message: `添加失败: ${(error as any).response.data.detail}`
+                        message: `添加/更新 失败: ${(error as any).response.data.detail}`
                     })
                 }
             },
-            async add(context, item){
-                try {
-                    const resp = await axios.post('/add', JSON.stringify(item))
-                    if (resp.status == 200){
-                        notification.info({message: "添加成功!"})
-                        // await this.dispatch('get_goods')
-                        context.state.tableDataSource.push(resp.data)
-                        context.state.goods.push(resp.data)
-                    }else{
-                        notification.error({message: `添加失败! : ${resp.data.detail}`})
-                    }
-                } catch (error) {
-                    notification.error({
-                        message: `添加失败: ${(error as any).response.data.detail}`
-                    })
-                }
-            }
         },
     }
 )
@@ -222,7 +220,7 @@ export function useStore() {
     return baseUseStore(key)
 }
 
-const axios = Axios.create({
+export const axios = Axios.create({
     baseURL: '/api',
     headers: {
         'Accept': "application/json",

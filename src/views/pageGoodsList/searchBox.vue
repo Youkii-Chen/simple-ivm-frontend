@@ -22,13 +22,13 @@ import { pinyin } from 'pinyin-pro'
 import type { SelectProps } from 'ant-design-vue'
 interface itemsData extends SelectProps {
     value: any
-    key: number
+    key: string
     keyword: string
 }
 
 function generate_keyword(str: string) {
     // 传入中文字符串, 返回对应的搜索关键字字符串.
-    return (str + pinyin(str, { toneType: 'none' }) + pinyin(str, { toneType: 'none', pattern: 'first' })).replace(/\s/g, "")
+    return (str + pinyin(str, { toneType: 'none' }) + pinyin(str, { toneType: 'none', pattern: 'first' })).replace(/\s/g, "").toLowerCase()
 }
 
 </script>
@@ -40,7 +40,7 @@ const store = useStore()
 const filterOption = (input: string, option: itemsData) => {
     // 当用户输入搜索的时候, 此方法会被调用, 如果返回 True, option选项将会显示在下拉栏中.
     // console.log(input, option)
-    return option.keyword.indexOf(input) >= 0
+    return option.keyword.toLowerCase().indexOf(input) >= 0
 };
 
 const itemChange = (values: string[]) => {
@@ -49,18 +49,19 @@ const itemChange = (values: string[]) => {
     if (values.length == 0){
         // 没有选项, 全部显示
         for (let item of store.state.goods){
-            store.state.tableDataSource.push(item)
+            store.state.tableDataSource.push(JSON.parse(JSON.stringify(item)))
         }
-        
+        // store.state.tableDataSource = store.state.goods
+
     }else{
         // 有选项, 显示选中项
         for (let item of store.state.goods){
             if (values.indexOf(item.name) >= 0){
-                store.state.tableDataSource.push(item)
+                store.state.tableDataSource.push(JSON.parse(JSON.stringify(item)))
             }
         }
     }
-    // console.log("tableDataSource: ", store.state.tableDataSource)
+    console.log("tableDataSource: ", store.state.tableDataSource)
     // console.log("goods: ", store.state.goods)
 }
 
@@ -68,7 +69,6 @@ const getItemsData = computed<itemsData[]>(() => {
     let result: itemsData[] = []
     
     for (let item of store.state.goods) {
-        /* @TODO: 改为从服务器请求 */
         result.push({
             value: item.name,
             key: item.key,

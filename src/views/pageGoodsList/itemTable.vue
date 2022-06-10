@@ -2,6 +2,10 @@
     <!-- 正文表格 -->
     <a-table :columns="columns" :dataSource="dataSource">
         <template #bodyCell="{ column, record }">
+            <template v-if="column.key === 'quan'">
+                {{ getTotalQuan(record) }}
+            </template>
+
             <template v-if="column.key === 'detail'">
                 <a-button @click="$emit('showItemDeatil', record)">详情</a-button>
             </template>
@@ -42,6 +46,7 @@ const columns: TableColumnType[] = [
 
 import { defineComponent, computed } from "vue"
 import { useStore } from '../../store' 
+import { cateGoodsType } from '../../types'
 
 export default defineComponent({
     emits: ['showItemDeatil'],
@@ -52,6 +57,13 @@ export default defineComponent({
             store,
             columns,
             dataSource: computed(() => store.state.tableDataSource),
+            getTotalQuan(record: cateGoodsType){
+                let count = 0
+                for (let item of record.goods){
+                    count += item.quan
+                }
+                return count
+            }
         }
     }
 })

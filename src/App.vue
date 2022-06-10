@@ -37,7 +37,11 @@ import { onMounted } from 'vue';
 import { LogoutOutlined } from '@ant-design/icons-vue'
 import { useRouter } from 'vue-router'
 import { useStore } from './store';
+import { notification } from 'ant-design-vue'
 
+notification.config({
+    duration: 0.5
+})
 // let selectedKeys = ref<string[]>(['4'])
 // watch(selectedKeys, (nv, ov)=>{
 //     // 导航栏选项改变
