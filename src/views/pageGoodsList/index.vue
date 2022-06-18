@@ -9,12 +9,6 @@
                 <add-item @open="openToNew"></add-item>
             </a-col>
         </a-row>
-        <a-row>
-            <a-col flex="auto">
-                <a-typography-paragraph style="margin: 0" type="secondary">允许使用中文, 全拼, 首字母简拼搜索, 例如: "苹果"、"pingguo"、"pg"
-                </a-typography-paragraph>
-            </a-col>
-        </a-row>
     </a-space>
 
     <a-divider style="margin: 8px 0" />
@@ -57,7 +51,7 @@ function openToNew(){
         key: 'add', // !重要 用于指定是新建项目, 因为 add 和 update共用一个接口
         name: '',
         mark: '',
-        unit: '',
+        unit: '包',
         goods: []
     }
     store.state.openDrawer = true

@@ -61,7 +61,7 @@ const itemChange = (values: string[]) => {
             }
         }
     }
-    console.log("tableDataSource: ", store.state.tableDataSource)
+    // console.log("tableDataSource: ", store.state.tableDataSource)
     // console.log("goods: ", store.state.goods)
 }
 

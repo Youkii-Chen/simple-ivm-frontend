@@ -1,12 +1,25 @@
 <template>
+    <div v-if="loading" id="loading">
+        <a-spin />
+    </div>
     <a-layout style="min-height: 100vh">
         <a-layout-header style="padding: 16px 16px; line-height: 32px; background-color: #74b9ff;">
-            <a-row type="flex" align="middle" style="height: 32px;">
+            <a-row type="flex" align="middle" :gutter="8" style="height: 32px;">
                 <a-col>
                     <h1 id="title">IVM-库存管理系统</h1>
                 </a-col>
                 <a-col flex="auto"></a-col>
                 <a-col>
+                    <a-tooltip>
+                        <template #title>刷新</template>
+                        <a-button @click="reflesh" type="text" shape="circle">
+                            <template #icon>
+                                <redo-outlined :style="{ fontSize: '24px', color: 'rgb(255,255,255,.85)' }" />
+                            </template>
+                        </a-button>
+                    </a-tooltip>
+                </a-col>
+                <!-- <a-col>
                     <a-tooltip>
                         <template #title>退出登录</template>
                         <a-button @click="store.dispatch('logout')" type="text" shape="circle">
@@ -15,7 +28,7 @@
                             </template>
                         </a-button>
                     </a-tooltip>
-                </a-col>
+                </a-col> -->
             </a-row>
         </a-layout-header>
 
@@ -25,7 +38,7 @@
         </a-layout-content>
 
         <a-layout-footer id="footer">
-            <a-typography-text>粤 ICP 备: xxxxxxxxxxxx</a-typography-text>
+            <a-typography-text>粤ICP备2022068682号-1</a-typography-text>
         </a-layout-footer>
 
 
@@ -33,14 +46,14 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import { LogoutOutlined } from '@ant-design/icons-vue'
+import { onMounted, computed } from 'vue';
+import { LogoutOutlined, RedoOutlined } from '@ant-design/icons-vue'
 import { useRouter } from 'vue-router'
 import { useStore } from './store';
 import { notification } from 'ant-design-vue'
 
 notification.config({
-    duration: 0.5
+    duration: 1.5
 })
 // let selectedKeys = ref<string[]>(['4'])
 // watch(selectedKeys, (nv, ov)=>{
@@ -50,7 +63,13 @@ notification.config({
 
 const store = useStore()
 const router = useRouter()
+const loading = computed(() => store.state.loading)
 
+function reflesh() {
+    if (!store.state.isLogined) { return }
+    
+    store.dispatch('get_goods')
+}
 onMounted(() => {
     while (true) {
         if (store.state) break
@@ -86,5 +105,15 @@ onMounted(() => {
     display: block;
     text-align: center;
     font-size: 12px;
+}
+
+#loading {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 999;
 }
 </style>

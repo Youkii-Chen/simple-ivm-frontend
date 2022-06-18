@@ -17,6 +17,7 @@ export interface State {
     access_token: string
     openDrawer: boolean
     currentItem: cateGoodsType
+    loading: boolean
 }
 
 // 定义 injection key
@@ -69,6 +70,7 @@ export const store = createStore<State>(
                 isLogined: (localStorage.getItem("access_token") as string) ? true : false,
                 debug: false,
                 goods: [],
+                loading: false,
                 tableDataSource: [],
                 access_token: (localStorage.getItem("access_token") as string),
                 openDrawer: false,
@@ -82,7 +84,7 @@ export const store = createStore<State>(
             }
         })(),
         actions: {
-            login(context, data){
+            async login(context, data){
                 const params = new URLSearchParams();
                 params.append('username', data.username);
                 params.append('password', data.password);
@@ -93,10 +95,12 @@ export const store = createStore<State>(
                         // 用户名密码校验失败
                         if (response.status == 401){
                             notification.error({
+                                duration: 3,
                                 message: `登录失败: 用户名或密码错误.`
                             }) 
                         }else{
                             notification.error({
+                                duration: 3,
                                 message: `登录失败: ${ response.data.detail }`
                             })
                         }
@@ -112,20 +116,24 @@ export const store = createStore<State>(
                     }
                 }).catch(
                     error => {
-                        console.log(error)
+                        // console.log(error)
                         notification.error({
+                            duration: 3,
                             message: `登录失败: ${error.response.data.detail}`
                         })
                     }
                 )
             },
-            logout(context){
+            async logout(context){
                 context.state.isLogined = false
                 context.state.access_token = ""
+                context.state.goods.length = 0
+                context.state.tableDataSource.length = 0
                 localStorage.removeItem("access_token")
                 router.replace("/login") // reflesh
             },
             async get_goods(context){
+                context.state.loading = true
                 try {
                     const response = await axios.post('/list')
                     if (response.status == 200){
@@ -134,9 +142,11 @@ export const store = createStore<State>(
                     }
                 } catch (error) {
                     notification.error({
+                        duration: 3,
                         message: `无法获取货物列表: ${(error as any).response.data.detail}`
                     })
                 }
+                context.state.loading = false
             },
             async del(context, item){
                 // 删除整个分类
@@ -159,10 +169,11 @@ export const store = createStore<State>(
                             }
                         })
                     }else{
-                        notification.error({message: `删除失败! : ${resp.data.detail}`})
+                        notification.error({duration: 3, message: `删除失败! : ${resp.data.detail}`})
                     }
                 } catch (error) {
                     notification.error({
+                        duration: 3,
                         message: `删除失败: ${(error as any).response.data.detail}`
                     })
                 }
@@ -170,15 +181,16 @@ export const store = createStore<State>(
             
             async update(context, [item, isNew = false]){
                 try {
+                    // console.debug(item)
                     const resp = await axios.post('/update', JSON.stringify(item))
-                    console.log(resp.data)
+                    // console.log(resp.data)
                     if (resp.status == 200){
                         notification.info({message: "更新成功!"})
                         item = resp.data
                         
                         if (isNew){
                             context.state.goods.push(item)
-                            context.state.tableDataSource.push(item)
+                            context.state.tableDataSource.push(JSON.parse(JSON.stringify(item)))
                         }else{
                             context.state.goods.forEach((item_,i)=> {
                                 if (item_.key === item.key) {
@@ -186,28 +198,40 @@ export const store = createStore<State>(
                                     item_.mark = item.mark
                                     // item_.quan = item.quan
                                     item_.unit = item.unit
-                                    item_.goods = item.goods
+                                    // item_.goods = item.goods
+
+                                    item_.goods.length = 0
+                                    for (let subItem of item.goods){
+                                        item_.goods.push(subItem)
+                                    }
                                 }
                             })
-    
+                            
+                            item = JSON.parse(JSON.stringify(item))
                             context.state.tableDataSource.forEach((item_,i)=> {
                                 if (item_.key === item.key) {
                                     item_.name = item.name
                                     item_.mark = item.mark
                                     // item_.quan = item.quan
                                     item_.unit = item.unit
-                                    item_.goods = item.goods
+                                    // item_.goods = item.goods
+                                    item_.goods.length = 0
+                                    for (let subItem of item.goods){
+                                        item_.goods.push(subItem)
+                                    }
                                 }
                             })
                         }
                         
+                        return JSON.parse(JSON.stringify(item))
                     }else{
-                        notification.error({message: `更新失败! : ${resp.data.detail}`})
+                        notification.error({duration: 3, message: `更新失败! : ${resp.data.detail}`})
                     }
                     
                 } catch (error) {
                     console.debug(error)
                     notification.error({
+                        duration: 3,
                         message: `添加/更新 失败: ${(error as any).response.data.detail}`
                     })
                 }

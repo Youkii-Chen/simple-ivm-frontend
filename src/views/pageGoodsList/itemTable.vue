@@ -45,24 +45,27 @@ const columns: TableColumnType[] = [
 ]
 
 import { defineComponent, computed } from "vue"
-import { useStore } from '../../store' 
+import { useStore } from '../../store'
 import { cateGoodsType } from '../../types'
 
 export default defineComponent({
     emits: ['showItemDeatil'],
-    setup(){
+    setup() {
         const store = useStore()
 
-        return{
+        return {
             store,
             columns,
             dataSource: computed(() => store.state.tableDataSource),
-            getTotalQuan(record: cateGoodsType){
+            getTotalQuan(record: cateGoodsType) {
+                function roundFun(value: number, n: number): number {
+                    return Math.round(value * Math.pow(10, n)) / Math.pow(10, n);
+                }
                 let count = 0
-                for (let item of record.goods){
+                for (let item of record.goods) {
                     count += item.quan
                 }
-                return count
+                return roundFun(count, 3).toString()
             }
         }
     }
